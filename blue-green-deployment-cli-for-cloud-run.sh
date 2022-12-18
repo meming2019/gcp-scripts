@@ -7,17 +7,19 @@ echo "######"
 echo "###### Preparing env... ###################################"
 echo "######"
 
+echo "## Set base env variables..."
+export MY_PROJECT='mz-df-demo-1'
+export MY_REGION='us-central1'
+export MY_ART_REPO='cats-app-repo3'
+export MY_SERVICE='cat-service3'
+export MY_REPO_HOST=${MY_REGION}-docker.pkg.dev
+
+gcloud config set project ${MY_PROJECT}
+
 echo "## Enable Artifact Registry..."
 gcloud services enable artifactregistry.googleapis.com
 echo "## Enable Cloud Run..."
 gcloud services enable run.googleapis.com
-
-echo "## Set base env variables..."
-export MY_PROJECT='mz-df-demo-1'
-export MY_REGION='us-central1'
-export MY_ART_REPO='cats-app-repo2'
-export MY_SERVICE='cat-service2'
-export MY_REPO_HOST=${MY_REGION}-docker.pkg.dev
 
 export MY_IMAGE_BLUE='cat-service-blue'
 export MY_IMAGE_URL_BLUE=${MY_REPO_HOST}/${MY_PROJECT}/${MY_ART_REPO}/${MY_SERVICE}:blue
@@ -92,7 +94,7 @@ echo "######"
 
 MY_ENDPOINT=`gcloud run services describe ${MY_SERVICE} --region=${MY_REGION} --format='value(status.url)'`
 echo "## Test app endpoint (100/0 'blue'/'green'): ${MY_ENDPOINT}"
-curl ${MY_ENDPOINT}/cat
+for i in {1..10}; do curl ${MY_ENDPOINT}/cat && echo ; done
 
 echo "## See traffic % distribution at https://console.cloud.google.com/run/detail/${MY_REGION}/${MY_SERVICE}/revisions?project=${MY_PROJECT}&supportedpurview=project"
 
@@ -100,11 +102,11 @@ echo "## Test 'green' by updating traffic flow to 50% to 'green' "
 gcloud run services update-traffic ${MY_SERVICE} --to-tags green=50 --region=${MY_REGION}
 
 echo "## Test app endpoint (50/50 'blue'/'green'): ${MY_ENDPOINT}"
-curl ${MY_ENDPOINT}/cat
+for i in {1..10}; do curl ${MY_ENDPOINT}/cat && echo ; done
 
 echo "## If 'green' appears fine, update traffic flow to 100% to 'green' "
 gcloud run services update-traffic ${MY_SERVICE} --to-tags green=100 --region=${MY_REGION}
 
 echo "## Test app endpoint (0/100 'blue'/'green'): ${MY_ENDPOINT}"
-curl ${MY_ENDPOINT}/cat
+for i in {1..10}; do curl ${MY_ENDPOINT}/cat && echo ; done
 
