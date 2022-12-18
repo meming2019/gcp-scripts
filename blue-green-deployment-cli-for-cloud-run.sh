@@ -1,4 +1,6 @@
-# End to end demo of blue/green deployment using Cloud Run
+#!/bin/bash
+
+# End-to-end demo of a blue/green deployment using Cloud Run
 # Based on gcloud CLI commands that are equivalent of the original demo steps in https://medium.com/@karthikg_54738/blue-green-deployment-google-cloud-run-927993d942c6
 
 echo "######"
