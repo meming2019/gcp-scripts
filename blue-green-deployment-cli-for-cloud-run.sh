@@ -13,6 +13,7 @@ export MY_REGION='us-central1'
 export MY_ART_REPO='cats-app-repo3'
 export MY_SERVICE='cat-service3'
 export MY_REPO_HOST=${MY_REGION}-docker.pkg.dev
+export MY_CONTAINER_PORT=5050
 
 gcloud config set project ${MY_PROJECT}
 
@@ -48,7 +49,7 @@ echo "######"
 echo "### Build local docker image - blue ..."
 docker build -t ${MY_IMAGE_BLUE} .
 echo "## To test the image locally: "
-echo "    docker run --publish 8080:8080 ${MY_IMAGE_BLUE}"
+echo "    docker run --publish 8080:${MY_CONTAINER_PORT} ${MY_IMAGE_BLUE}"
 echo "    curl http://localhost:8080/cat"
 
 echo "## Tag and Push (Linux/amd64) image \"${MY_IMAGE_BLUE}\" to artifactory url \"${MY_IMAGE_URL_BLUE}\"..."
@@ -60,7 +61,7 @@ docker buildx build --platform 'linux/amd64' --push -t${MY_IMAGE_URL_BLUE} .
 echo "## See images/digests at https://console.cloud.google.com/artifacts/docker/${MY_PROJECT}/${MY_REGION}/${MY_ART_REPO}/${MY_SERVICE}?project=${MY_PROJECT}"
 
 echo "## Deploy & run \"${MY_IMAGE_URL_BLUE}\" in Cluod Run as \"${MY_SERVICE}\"..."
-gcloud run deploy ${MY_SERVICE} --image=${MY_IMAGE_URL_BLUE} --tag=blue --region=${MY_REGION} --allow-unauthenticated  --port=5050
+gcloud run deploy ${MY_SERVICE} --image=${MY_IMAGE_URL_BLUE} --tag=blue --region=${MY_REGION} --allow-unauthenticated  --port=${MY_CONTAINER_PORT}
 
 MY_ENDPOINT=`gcloud run services describe ${MY_SERVICE} --region=${MY_REGION} --format='value(status.url)'`
 echo "## Test app endpoint: ${MY_ENDPOINT}"
@@ -76,7 +77,7 @@ sed -i -e "s/version': '[a-z][a-z]*'/version': 'green'/g" index.js
 echo "## Build local docker image ..."
 docker build -t ${MY_IMAGE_GREEN} .
 echo "## To test the image locally: "
-echo "    docker run --publish 8080:8080 ${MY_IMAGE_GREEN}"
+echo "    docker run --publish 8080:${MY_CONTAINER_PORT} ${MY_IMAGE_GREEN}"
 echo "    curl http://localhost:8080/cat"
 
 echo "## Tag and Push (Linux/amd64) image \"${MY_IMAGE_GREEN}\" to artifactory url \"${MY_IMAGE_URL_GREEN}\"..."
@@ -86,7 +87,7 @@ docker tag ${MY_IMAGE_GREEN} ${MY_IMAGE_URL_GREEN}
 docker buildx build --platform 'linux/amd64' --push -t${MY_IMAGE_URL_GREEN} .
 
 echo "## Deploy but NOT run \"${MY_IMAGE_URL_GREEN}\" in Cluod Run as \"${MY_SERVICE}\"..."
-gcloud run deploy ${MY_SERVICE} --image=${MY_IMAGE_URL_GREEN} --tag=green --region=${MY_REGION} --allow-unauthenticated  --port=5050 --no-traffic
+gcloud run deploy ${MY_SERVICE} --image=${MY_IMAGE_URL_GREEN} --tag=green --no-traffic --region=${MY_REGION} --port=${MY_CONTAINER_PORT} --allow-unauthenticated
 
 echo "######"
 echo "###### Verify the new 'green' version before switching all traffic to it... ###################################"
